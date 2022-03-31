@@ -52,6 +52,7 @@ Client *inserer(Client * abr, int numeroTel, int prixAppel){
 	//cas arbre vide
 	if(abr == NULL){
 		abr = createClient(numeroTel, 1, prixAppel);
+		printf("Salut\n");
 		return abr;
 	}
 	prec = NULL;
@@ -88,7 +89,11 @@ Client *supprimerClient(Client * abr, int numeroTel){
 	}
 	prec = NULL;
 	temp = abr;
+
+	//on parcours l'arbre jusqu'a trouver le noeud ou arriver a la fin d'une branche
 	while(temp != NULL){
+
+		//cas ou on a trouve le noeud
 		if(temp->numero == numeroTel){
 
 			//cas ou temp a 0 ou 1 fils
@@ -105,17 +110,23 @@ Client *supprimerClient(Client * abr, int numeroTel){
 						prec->filsG = fils;
 					}
 				}
+				//on libère le noeud
+				free(temp);
 			}else{//cas ou temp a 2 fils
 				prec = detache_successeur(temp);
 				//on copie les valeurs du succeseur dans le noeud a supprimer
 				temp->numero = prec->numero;
 				temp->nbAppel = prec->nbAppel;
 				temp->coutTot = prec->coutTot;
+
+				//on libère le noeud
+				free(prec);
 			}
 
 			printf("Le noeud %d a ete supprime\n",numeroTel);
 			return abr;
 
+		//cas ou on continue a chercher
 		}else if(numeroTel < temp->numero){
 			prec = temp;
 			temp = prec->filsG;
@@ -124,25 +135,31 @@ Client *supprimerClient(Client * abr, int numeroTel){
 			temp = prec->filsD;
 		}
 	}
+
+	//on est sorti de la boucle, le noeud n'est pas dans l'arbre
 	printf("Client %d non present dans l'arbre, aucune suppression\n", numeroTel);
 	return abr;
 }
 
 
 void parcourirInfixe(Client * abr){
+	if(abr != NULL){
+		if(abr->filsG!=NULL){
+			parcourirInfixe(abr->filsG);
+		}
 
-	if(abr->filsG!=NULL){
-		parcourirInfixe(abr->filsG);
-	}
+		printf("Client num : [%d], nbAppel : %d, coutTot: %d\n",abr->numero,abr->nbAppel,abr->coutTot);
 
-	printf("Client num : [%d], nbAppel : %d, coutTot: %d\n",abr->numero,abr->nbAppel,abr->coutTot);
-
-	if(abr->filsD!=NULL){
-		parcourirInfixe(abr->filsD);
+		if(abr->filsD!=NULL){
+			parcourirInfixe(abr->filsD);
+		}
+	}else{
+		printf("Arbre vide, rien a parcourir\n");
 	}
 }
 
-
+//fonction qui renvoi le min d'un sous arbre, on fournis le depart du sous arbre
+// et son pere ainsi que le tableau ou l'on mettra le resultat
 void min(Client * min, Client * pere_min, Client *buffer[2]){
 	while(min->filsG != NULL){
 		pere_min = min;

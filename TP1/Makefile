@@ -6,3 +6,6 @@ main.o : main.c
 
 liste.o : liste.c
 	gcc -c liste.c -o liste.o
+
+clean :
+	rm *.o exec

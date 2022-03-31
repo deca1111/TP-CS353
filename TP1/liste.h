@@ -12,7 +12,7 @@ typedef struct client {
 
 // Nombre total de lignes dans le fichier
 #ifndef NBLOGLINE
-#define NBLOGLINE    200000
+#define NBLOGLINE    2000000
 #endif
 
 // Nombre de clients
@@ -25,5 +25,7 @@ Client *createClient(int numero, int nbAppel, int prixAppel);
 Client* addLogLine(Client *liste, int numero, int prixAppel);
 
 void dumpListe(Client *liste);
+
+void supprimerListe(Client *liste);
 
 #endif

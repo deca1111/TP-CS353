@@ -13,7 +13,7 @@ typedef struct client {
 
 // Nombre total de lignes dans le fichier
 #ifndef NBLOGLINE
-#define NBLOGLINE    1000000
+#define NBLOGLINE    2000000
 #endif
 // Nombre de clients
 #ifndef NBCLIENT
@@ -32,7 +32,9 @@ Client *supprimerClient(Client * abr, int numeroTel);
 
 void parcourirInfixe(Client * abr);
 
-void min(Client * min, Client * pere_min, Client ** buffer);
+//fonction qui renvoi le min d'un sous arbre, on fournis le depart du sous arbre
+// et son pere ainsi que le tableau ou l'on mettra le resultat
+void min(Client * min, Client * pere_min, Client *buffer[2]);
 
 //le pere doit avoir un fils droit
 Client * detache_successeur(Client* pere);

@@ -37,7 +37,9 @@ int main(int argc, char const *argv[]) {
 	//
 	dumpListe(list);
 	//
-	printf("======= Facturation appels telephoniques ======\n");
+	printf("======= Facturation appels telephoniques ======\nSuppression de la liste\n");
+
+	supprimerListe(list);
 
 	return 0;
 }
