@@ -37,18 +37,18 @@
  *----------------------------------------------------------------------------*/
 typedef struct structItem
 {
-	uint8_t status;  
+	uint8_t status;
 	uint32_t code;
 	char name[ITEM_NAME_SIZE];
 	float price;
-	uint8_t dirty; 
+	uint8_t dirty;
 } Item;
 
 
 /*----------------------------------------------------------------------------
  * Variable globale contenant le tableau
  *----------------------------------------------------------------------------*/
-Item hash_table[TABLE_SIZE];
+//extern Item hash_table[TABLE_SIZE];
 
 
 /*----------------------------------------------------------------------------
@@ -60,7 +60,7 @@ void init();
 /*----------------------------------------------------------------------------
  * Cette fonction calcule la valeur de hachage pour le produit itemCode
  *----------------------------------------------------------------------------*/
-uint32_t hashkey(uint32_t itemCode,unsigned int nbTry); 
+uint32_t hashkey(uint32_t itemCode,unsigned int nbTry);
 
 /*----------------------------------------------------------------------------
  * Cette fonction insère le produit indiqué dans la table de hachage.
@@ -108,4 +108,3 @@ int updateItem(uint32_t  itemCode, char *itemName, float itemPrice);
  * la fonction de réorganisation in situ:
  *----------------------------------------------------------------------------*/
 void rebuildTable();
-

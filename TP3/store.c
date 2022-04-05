@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdint.h>
 
+static Item hash_table[TABLE_SIZE];
 /*----------------------------------------------------------------------------
  * Cette fonction initialise le tableau hash_table
  * en positionnant tous les elements à NULL_ITEM
@@ -41,38 +42,38 @@ uint32_t hashkey(uint32_t itemCode,uint32_t nbTry)
  * Si la table est pleine, alors la fonction retourne TABLE_FULL (-2).
  *----------------------------------------------------------------------------*/
 int insertItem(uint32_t itemCode, char* itemName, float itemPrice){
-	Item itemDeleted, selectedItem;
+	Item *itemDeleted, *selectedItem;
 	int deletedLibre = 0;
 	for(uint32_t i = 0; i < TABLE_SIZE; i++){
 
-		 selectedItem = hash_table[hashkey(itemCode, i)];
+		 selectedItem = &hash_table[hashkey(itemCode, i)];
 
-		 if (selectedItem.status == NULL_ITEM) {
+		 if (selectedItem->status == NULL_ITEM) {
 			 if (deletedLibre) {
 				 selectedItem = itemDeleted;
 			 }
-			 selectedItem.code = itemCode;
-			 selectedItem.status = USED_ITEM;
-			 strcpy(selectedItem.name, itemName);
-			 selectedItem.price = itemPrice;
+			 selectedItem->code = itemCode;
+			 selectedItem->status = USED_ITEM;
+			 strcpy(selectedItem->name, itemName);
+			 selectedItem->price = itemPrice;
 			 return SUCCESS;
 		 }
 
-		 if ((selectedItem.status == USED_ITEM) && ( selectedItem.code == itemCode)) {
+		 if ((selectedItem->status == USED_ITEM) && ( selectedItem->code == itemCode)) {
 			 return INSERT_ALREADY_EXIST;
 		 }
 
-		 if ((selectedItem.status == DELETED_ITEM) && (deletedLibre == 0)) {
+		 if ((selectedItem->status == DELETED_ITEM) && (deletedLibre == 0)) {
 			 itemDeleted = selectedItem;
 			 deletedLibre = 1;
 		 }
 	}
 
 	if (deletedLibre) {
-		itemDeleted.code = itemCode;
-		itemDeleted.status = USED_ITEM;
-		strcpy(itemDeleted.name, itemName);
-		itemDeleted.price = itemPrice;
+		itemDeleted->code = itemCode;
+		itemDeleted->status = USED_ITEM;
+		strcpy(itemDeleted->name, itemName);
+		itemDeleted->price = itemPrice;
 		return SUCCESS;
 	}
 
@@ -84,9 +85,19 @@ int insertItem(uint32_t itemCode, char* itemName, float itemPrice){
  * Si le produit est supprimé avec succès, alors la fonction retourne SUCCESS (0)
  * Si le produit n'existe pas, alors la fonction retourne DELETE_NO_ROW (-4)
  *----------------------------------------------------------------------------*/
-int suppressItem(unsigned int itemCode)
-{
-	return SUCCESS;
+int suppressItem(unsigned int itemCode){
+	Item * item;
+	for(uint32_t i = 0; i < TABLE_SIZE; i++){
+		item = &hash_table[hashkey(itemCode, i)];
+		if(item->status == NULL_ITEM){
+			return DELETE_NO_ROW;
+		}
+		if(item->code == itemCode){
+			item->status = DELETED_ITEM;
+			return SUCCESS;
+		}
+	}
+	return DELETE_NO_ROW;
 }
 
 /*----------------------------------------------------------------------------
@@ -97,8 +108,14 @@ int suppressItem(unsigned int itemCode)
  * son index dans la table de hashage
  * sa valeur de hash
  *----------------------------------------------------------------------------*/
-void dumpItems()
-{
+void dumpItems(){
+	printf("|%60s|\n|   CODE   |            LIBELLE             |  PRIX  | INDEX |\n");
+	for(uint32_t i = 0; i < TABLE_SIZE; i++){
+		if(hash_table[i].status == USED_ITEM){
+			printf("|%-10d|%-32s|%2.5f|%-7d|","",hash_table[i].status,hash_table[i].name,hash_table[i].price,i);
+		}
+	}
+	printf("\n");
 }
 
 
