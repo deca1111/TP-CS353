@@ -109,13 +109,38 @@ int suppressItem(unsigned int itemCode){
  * sa valeur de hash
  *----------------------------------------------------------------------------*/
 void dumpItems(){
-	printf("|%60s|\n|   CODE   |            LIBELLE             |  PRIX  | INDEX |\n");
+	printf("\n+------------+--------------------------------+----------+--------+\n|");
+	couleur("7");
+	couleur("1");
+	printf("    CODE    |            LIBELLE             |   PRIX   | INDEX  ");
+	couleur("0");
+	printf("|\n+------------+--------------------------------+----------+--------+\n");
 	for(uint32_t i = 0; i < TABLE_SIZE; i++){
 		if(hash_table[i].status == USED_ITEM){
-			printf("|%-10d|%-32s|%2.5f|%-7d|","",hash_table[i].status,hash_table[i].name,hash_table[i].price,i);
+			char code[20];
+			sprintf(code,"%d",hash_table[i].code);
+			char prix[20];
+			sprintf(prix,"%3.2f",hash_table[i].price);
+			char index[20];
+			sprintf(index,"%d",i);
+
+			printf("|%*s%*s%*s|%*s%*s%*s|%*s%*s%*s|%*s%*s%*s|\n",
+				(int)(12-strlen(code))/2,"",
+				(int)(strlen(code)+(strlen(code)%2)),code,
+				(int)(12-strlen(code))/2,"",
+				(int)(32-strlen(hash_table[i].name))/2,"",
+				(int)(strlen(hash_table[i].name)+(strlen(hash_table[i].name)%2)),hash_table[i].name,
+				(int)(32-strlen(hash_table[i].name))/2,"",
+				(int)(10-strlen(prix))/2,"",
+				(int)(strlen(prix)+(strlen(prix)%2)),prix,
+				(int)(10-strlen(prix))/2,"",
+				(int)(8-strlen(index))/2,"",
+				(int)(strlen(index)+(strlen(index)%2)),index,
+				(int)(8-strlen(index))/2,""
+			);
+			printf("+------------+--------------------------------+----------+--------+\n");
 		}
 	}
-	printf("\n");
 }
 
 

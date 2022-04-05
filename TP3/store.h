@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "couleurs.h"
 
 
 /*----------------------------------------------------------------------------

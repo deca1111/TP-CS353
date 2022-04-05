@@ -8,13 +8,16 @@
 
 int main()
 {
-    //
+		clrscr();
+		
     printf("****** Gestionnaire de magasin ******\n");
     init();
-		printf("Insertion : %d\n", insertItem(10001,"SUCRE",10));
-		printf("Insertion : %d\n", insertItem(10001,"SUCRE",10));
+		insertItem(10001,"SUCRE - 500G",1.5);
+		insertItem(10002,"SUCRE - 1KG",2.2);
+		insertItem(10003,"SUCRE - 10KG",20);
+		insertItem(583,"POIVRE - VRAC 100G",1.27);
     dumpItems();
-    printf("=======Gestionnaire de magasin ======\n");
+    printf("\n\n=======Gestionnaire de magasin ======\n");
 
     return 0;
 }
