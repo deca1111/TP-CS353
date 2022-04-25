@@ -109,3 +109,7 @@ int updateItem(uint32_t  itemCode, char *itemName, float itemPrice);
  * la fonction de réorganisation in situ:
  *----------------------------------------------------------------------------*/
 void rebuildTable();
+
+//FONCTIONS test
+
+void test();

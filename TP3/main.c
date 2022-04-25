@@ -9,7 +9,7 @@
 int main()
 {
 		clrscr();
-
+/*
     printf("****** Gestionnaire de magasin ******\n");
     init();
 		insertItem(10001,"SUCRE - 500G",1.5);
@@ -20,6 +20,8 @@ int main()
 		suppressItem(583);
     dumpItems();
     printf("\n\n=======Gestionnaire de magasin ======\n");
+*/
+		test();
 
     return 0;
 }

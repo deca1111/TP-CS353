@@ -92,7 +92,7 @@ int suppressItem(unsigned int itemCode){
 		if(item->status == NULL_ITEM){
 			return DELETE_NO_ROW;
 		}
-		if(item->code == itemCode){
+		if((item->code == itemCode) && (item->status == USED_ITEM)){
 			item->status = DELETED_ITEM;
 			return SUCCESS;
 		}
@@ -148,8 +148,17 @@ void dumpItems(){
  * Cette fonction retourne NULL si le produit n'existe pas.
  * Cette fonction retourne un pointeur vers le produit si le produit existe.
  *----------------------------------------------------------------------------*/
-Item *getItem(unsigned int itemCode)
-{
+Item *getItem(unsigned int itemCode){
+	Item * item;
+	for(uint32_t i = 0; i < TABLE_SIZE; i++){
+		item = &hash_table[hashkey(itemCode, i)];
+		if(item->status == NULL_ITEM){
+			return NULL;
+		}
+		if((item->code == itemCode) && (item->status == USED_ITEM)){
+			return item;
+		}
+	}
 	return NULL;
 }
 
@@ -170,4 +179,31 @@ int updateItem(unsigned int itemCode, char *itemName, float itemPrice)
  *----------------------------------------------------------------------------*/
 void rebuildTable()
 {
+}
+
+
+//FONCTIONS test
+
+void test(){
+	init();
+	//remplissage de la table
+	for (int i = 0; i < TABLE_SIZE; i++) {
+		if(insertItem(i,"ITEM",(float)i/10) == -2){
+			printf("TABLE PLEINE, %d non insere\n", i);
+		}
+	}
+	printf("=================================================================================\n\t\t\tAFFICHAGE DE LA TABLE PLEINE\n=================================================================================\n");
+	dumpItems();
+	//on vide la table
+	for (int i = 0; i < TABLE_SIZE; i++) {
+		if(suppressItem(i) == -4){
+			printf("ITEM inexistant, %d non delete\n", i);
+		}
+	}
+	printf("=================================================================================\n\t\t\tAFFICHAGE DE LA TABLE VIDE\n=================================================================================\n");
+	dumpItems();
+	insertItem(0,"New Item",666);
+	dumpItems();
+	printf("Adresse de l'item 0 : %p\n", getItem(0));
+	printf("Adresse de l'item 100 : %p\n", getItem(100));
 }
