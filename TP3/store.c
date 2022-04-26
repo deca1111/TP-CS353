@@ -167,9 +167,14 @@ Item *getItem(unsigned int itemCode){
  * Si le produit est mis à jour avec succès, alors la fonction retourne SUCCESS (0)
  * Si le produit n'existe pas, alors la fonction retourne UPDATE_NO_ROW (-5)
  *----------------------------------------------------------------------------*/
-int updateItem(unsigned int itemCode, char *itemName, float itemPrice)
-{
-	return SUCCESS;
+int updateItem(unsigned int itemCode, char *itemName, float itemPrice) {
+	Item * item = getItem(itemCode);
+	if(item != NULL){
+		strcpy(item->name, itemName);
+		item->price = itemPrice;
+		return SUCCESS;
+	}
+	return UPDATE_NO_ROW;
 }
 
 
@@ -177,12 +182,39 @@ int updateItem(unsigned int itemCode, char *itemName, float itemPrice)
 /*----------------------------------------------------------------------------
  * la fonction de réorganisation in situ:
  *----------------------------------------------------------------------------*/
-void rebuildTable()
-{
+void rebuildTable(){
+	Item* selectedItem, *newLocation;
+	int essai;
+	//on commence par passer toues les clefs a "sale"
+	for(int i=0; i<TABLE_SIZE; i++){
+		if(hash_table[i].status == USED_ITEM){
+			hash_table[i].dirty = 1;
+		}
+	}
+	//on parcours la table a la recherche de cles sales
+	for(int i=0; i<TABLE_SIZE; i++){
+		selectedItem = &hash_table[i];
+		if((selectedItem->status == USED_ITEM) && (selectedItem->dirty == 1)){
+			essai = 0;
+			newLocation = &hash_table[hashkey(selectedItem->code, essai)];
+			if((newLocation->status == NULL_ITEM) || (newLocation->status == DELETED_ITEM)){
+				//on insere la cle ancienement sale dans la case vide
+				newLocation->code = selectedItem->code;
+				newLocation->status = USED_ITEM;
+				strcpy(newLocation->name, selectedItem->name);
+				newLocation->price = selectedItem->price;
+				newLocation->dirty = 0;
+				selectedItem->status = NULL_ITEM;
+			}else if((newLocation->status == USED_ITEM) && (newLocation->dirty == 1)){
+				
+			}
+		}
+	}
 }
 
 
-//FONCTIONS test
+//FONCTIONS test et utiles
+
 
 void test(){
 	init();
@@ -206,4 +238,6 @@ void test(){
 	dumpItems();
 	printf("Adresse de l'item 0 : %p\n", getItem(0));
 	printf("Adresse de l'item 100 : %p\n", getItem(100));
+	updateItem(0,"Old Item",999);
+	dumpItems();
 }
