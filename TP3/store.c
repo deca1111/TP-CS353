@@ -8,8 +8,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <time.h>
 
 static Item hash_table[TABLE_SIZE];
+static Item* hash_table_index[TABLE_SIZE];
 /*----------------------------------------------------------------------------
  * Cette fonction initialise le tableau hash_table
  * en positionnant tous les elements à NULL_ITEM
@@ -22,6 +24,7 @@ void init()
         hash_table[i].status = NULL_ITEM;
         hash_table[i].price = 0.00f;
         hash_table[i].code = 0;
+				hash_table_index[i] = NULL;
     }
 }
 
@@ -56,6 +59,8 @@ int insertItem(uint32_t itemCode, char* itemName, float itemPrice){
 			 selectedItem->status = USED_ITEM;
 			 strcpy(selectedItem->name, itemName);
 			 selectedItem->price = itemPrice;
+
+			 insertItemIndex(selectedItem);
 			 return SUCCESS;
 		 }
 
@@ -74,6 +79,8 @@ int insertItem(uint32_t itemCode, char* itemName, float itemPrice){
 		itemDeleted->status = USED_ITEM;
 		strcpy(itemDeleted->name, itemName);
 		itemDeleted->price = itemPrice;
+
+		insertItemIndex(itemDeleted);
 		return SUCCESS;
 	}
 
@@ -94,6 +101,12 @@ int suppressItem(unsigned int itemCode){
 		}
 		if((item->code == itemCode) && (item->status == USED_ITEM)){
 			item->status = DELETED_ITEM;
+
+			for(int j = 0; j < TABLE_SIZE; j++){
+				if(hash_table_index[j] == item){
+					hash_table_index[j] = NULL;
+				}
+			}
 			return SUCCESS;
 		}
 	}
@@ -183,7 +196,7 @@ int updateItem(unsigned int itemCode, char *itemName, float itemPrice) {
  * la fonction de réorganisation in situ:
  *----------------------------------------------------------------------------*/
 void rebuildTable(){
-	Item* selectedItem, *newLocation;
+	Item* selectedItem, *newLocation, *temp = malloc(sizeof(Item));
 	int essai;
 	//on commence par passer toues les clefs a "sale"
 	for(int i=0; i<TABLE_SIZE; i++){
@@ -199,22 +212,110 @@ void rebuildTable(){
 			newLocation = &hash_table[hashkey(selectedItem->code, essai)];
 			if((newLocation->status == NULL_ITEM) || (newLocation->status == DELETED_ITEM)){
 				//on insere la cle ancienement sale dans la case vide
-				newLocation->code = selectedItem->code;
-				newLocation->status = USED_ITEM;
-				strcpy(newLocation->name, selectedItem->name);
-				newLocation->price = selectedItem->price;
+				*newLocation = *selectedItem;
 				newLocation->dirty = 0;
 				selectedItem->status = NULL_ITEM;
 			}else if((newLocation->status == USED_ITEM) && (newLocation->dirty == 1)){
-				
+				//on echange la cle à inserer avec la cle sale
+				*temp = *newLocation;
+				*newLocation = *selectedItem;
+				newLocation->dirty = 0;
+				selectedItem->status = NULL_ITEM;
+				//on reinsert la cle sale
+				if(insertItem(temp->code, temp->name, temp->price) != 0){
+					printf("Problème de réinsertion\n");
+					exit(0);
+				}
+				getItem(temp->code)->dirty = 0;
+			}else{
+				*temp = *selectedItem;
+				selectedItem->status = NULL_ITEM;
+				if(insertItem(temp->code, temp->name, temp->price) != 0){
+					printf("Problème de réinsertion\n");
+					exit(0);
+				}
+				getItem(temp->code)->dirty = 0;
 			}
 		}
 	}
+	free(temp);
 }
 
+/*----------------------------------------------------------------------------
+ * fonction de recherche par noms
+ *----------------------------------------------------------------------------*/
+Result *findItem(char* itemName){
+	Result* head = NULL, *new;
+	for(int i = 0; i < TABLE_SIZE; i++){
+		if(strcmp(itemName, hash_table[i].name) == 0){
+			if(head == NULL){
+				head = (Result*) malloc(sizeof(Result));
+				head->next = NULL;
+				head->item = &hash_table[i];
+			}else{
+				new = (Result*) malloc(sizeof(Result));
+				new->next = head->next;
+				head->next = new;
+				new->item = &hash_table[i];
+			}
+		}
+	}
+	return head;
+}
+
+int insertItemIndex(Item* item){
+	int index;
+	for(int i=0; i<TABLE_SIZE; i++){
+		index = hashkey(hashIndex(item->name, strlen(item->name)),i);
+		if(hash_table_index[index] == NULL){
+			hash_table_index[index] = item;
+			return SUCCESS;
+		}
+	}
+	return TABLE_FULL;
+}
+
+Result *findItemWithIndex(char* itemName){
+	Result* head = NULL, *new;
+	int index;
+	for(int i = 0; i < TABLE_SIZE; i++){
+		index = hashkey(hashIndex(itemName, strlen(itemName)),i);
+		if(hash_table_index[index] == NULL){
+			return head;
+		}
+		if(head == NULL){
+			head = (Result*) malloc(sizeof(Result));
+			head->next = NULL;
+			head->item = hash_table_index[index];
+		}else{
+			new = (Result*) malloc(sizeof(Result));
+			new->next = head->next;
+			head->next = new;
+			new->item = hash_table_index[index];
+		}
+	}
+	return head;
+}
+
+unsigned int hashIndex(const char *buffer, int size) {
+	unsigned int h = 0;
+	for (int i=0; i<size; i++){
+		h = ( h * 1103515245u ) + 12345u + buffer[i];
+	}
+	return h/2;
+}
 
 //FONCTIONS test et utiles
 
+void countDeleted(){
+	int nbDeleted = 0;
+	for(int i =0; i<TABLE_SIZE; i++){
+		if(hash_table[i].status == DELETED_ITEM){
+			nbDeleted++;
+		}
+	}
+	printf("Nombre d'item deleted : %d\n",nbDeleted );
+}
 
 void test(){
 	init();
@@ -240,4 +341,64 @@ void test(){
 	printf("Adresse de l'item 100 : %p\n", getItem(100));
 	updateItem(0,"Old Item",999);
 	dumpItems();
+
+	//test de la fonction rebuildtable
+	init();
+	uint32_t keys[TABLE_SIZE];
+	srand( time( NULL ) );
+
+	//remplissage aleatoire
+	for (int i = 0; i < 1000; i++) {
+		keys[i] = rand() % (4294967296-1);
+		insertItem(keys[i], "ITEM", (float) (i%1000/10));
+	}
+	//suppression partielle
+	for (int i = 0; i < 800; i++) {
+		suppressItem(keys[i]);
+	}
+
+	//remplissage aleatoire
+	for (int i = 0; i < 800; i++) {
+		keys[i] = rand() % (4294967296-1);
+		insertItem(keys[i], "ITEM", (float) (i%1000/10));
+	}
+	//suppression partielle
+	for (int i = 0; i < 400; i++) {
+		suppressItem(keys[i]);
+	}
+
+	printf("\n=================================================================================\n\t\t\tRESULTAS DU REBUILD\n=================================================================================\n");
+	printf("AVANT REBUILD :\n");
+	//on compte les item delete
+	countDeleted();
+	rebuildTable();
+	printf("APRES REBUILD :\n");
+	countDeleted();
+
+	init();
+	printf("\n=================================================================================\n\t\t\tPARTIE 2 : RECHERCHE PAR NOMS\n=================================================================================\n");
+	insertItem(1,"SUCRE",1.5);
+	insertItem(2,"SUCRE",2.2);
+	insertItem(3,"CONFITURE",20);
+
+	Result* tete, *next;
+	tete = findItem("SUCRE");
+	next = tete;
+	while(next!= NULL){
+		printf("Item code : %d, Item name : %s\n", next->item->code, next->item->name);
+		next = next->next;
+	}
+	tete = findItemWithIndex("SUCRE");
+	next = tete;
+	while(next!= NULL){
+		printf("Item code : %d, Item name : %s\n", next->item->code, next->item->name);
+		next = next->next;
+	}
+	suppressItem(1);
+	tete = findItemWithIndex("SUCRE");
+	next = tete;
+	while(next!= NULL){
+		printf("Item code : %d, Item name : %s\n", next->item->code, next->item->name);
+		next = next->next;
+	}
 }

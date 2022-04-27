@@ -45,7 +45,10 @@ typedef struct structItem
 	uint8_t dirty;
 } Item;
 
-
+typedef struct structResult {
+	Item *item;
+	struct structResult *next;
+} Result;
 /*----------------------------------------------------------------------------
  * Variable globale contenant le tableau
  *----------------------------------------------------------------------------*/
@@ -110,6 +113,17 @@ int updateItem(uint32_t  itemCode, char *itemName, float itemPrice);
  *----------------------------------------------------------------------------*/
 void rebuildTable();
 
+/*----------------------------------------------------------------------------
+ * fonction de recherche par noms
+ *----------------------------------------------------------------------------*/
+Result *findItem(char* itemName);
+
+int insertItemIndex(Item* item);
+
+Result *findItemWithIndex(char* itemName);
+
+unsigned int hashIndex(const char *buffer, int size);
 //FONCTIONS test
 
 void test();
+void countDeleted();
