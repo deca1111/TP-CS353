@@ -101,12 +101,6 @@ int suppressItem(unsigned int itemCode){
 		}
 		if((item->code == itemCode) && (item->status == USED_ITEM)){
 			item->status = DELETED_ITEM;
-
-			for(int j = 0; j < TABLE_SIZE; j++){
-				if(hash_table_index[j] == item){
-					hash_table_index[j] = NULL;
-				}
-			}
 			return SUCCESS;
 		}
 	}
@@ -136,6 +130,7 @@ void dumpItems(){
 			char index[20];
 			sprintf(index,"%d",i);
 
+			//on fait un joli tableau
 			printf("|%*s%*s%*s|%*s%*s%*s|%*s%*s%*s|%*s%*s%*s|\n",
 				(int)(12-strlen(code))/2,"",
 				(int)(strlen(code)+(strlen(code)%2)),code,
@@ -246,13 +241,14 @@ void rebuildTable(){
  *----------------------------------------------------------------------------*/
 Result *findItem(char* itemName){
 	Result* head = NULL, *new;
+	//parcours toute la table de hashage et remplis au la liste chainee de resultat
 	for(int i = 0; i < TABLE_SIZE; i++){
 		if(strcmp(itemName, hash_table[i].name) == 0){
-			if(head == NULL){
+			if(head == NULL){//initialisation de la tete
 				head = (Result*) malloc(sizeof(Result));
 				head->next = NULL;
 				head->item = &hash_table[i];
-			}else{
+			}else{//insertion en tete
 				new = (Result*) malloc(sizeof(Result));
 				new->next = head->next;
 				head->next = new;
@@ -263,6 +259,7 @@ Result *findItem(char* itemName){
 	return head;
 }
 
+//insert le pointeur vers item dans la deuxieme table de hashage
 int insertItemIndex(Item* item){
 	int index;
 	for(int i=0; i<TABLE_SIZE; i++){
@@ -275,28 +272,32 @@ int insertItemIndex(Item* item){
 	return TABLE_FULL;
 }
 
+//permet de retrouver tout les item d'apres le nom, et les met dans une liste chainee
 Result *findItemWithIndex(char* itemName){
 	Result* head = NULL, *new;
 	int index;
 	for(int i = 0; i < TABLE_SIZE; i++){
 		index = hashkey(hashIndex(itemName, strlen(itemName)),i);
-		if(hash_table_index[index] == NULL){
+		if((hash_table_index[index] != NULL) && (hash_table_index[index]->status == NULL_ITEM)){
 			return head;
 		}
-		if(head == NULL){
-			head = (Result*) malloc(sizeof(Result));
-			head->next = NULL;
-			head->item = hash_table_index[index];
-		}else{
-			new = (Result*) malloc(sizeof(Result));
-			new->next = head->next;
-			head->next = new;
-			new->item = hash_table_index[index];
+		if((hash_table_index[index] != NULL) && (hash_table_index[index]->status == USED_ITEM) && (strcmp(hash_table_index[index]->name, itemName)==0)){
+			if(head == NULL){//initialisation de la tete
+				head = (Result*) malloc(sizeof(Result));
+				head->next = NULL;
+				head->item = hash_table_index[index];
+			}else{//insertion en tete
+				new = (Result*) malloc(sizeof(Result));
+				new->next = head->next;
+				head->next = new;
+				new->item = hash_table_index[index];
+			}
 		}
 	}
 	return head;
 }
 
+//fonction de hashage selon une chaine de caractere
 unsigned int hashIndex(const char *buffer, int size) {
 	unsigned int h = 0;
 	for (int i=0; i<size; i++){
@@ -307,6 +308,15 @@ unsigned int hashIndex(const char *buffer, int size) {
 
 //FONCTIONS test et utiles
 
+//free la liste chainee de resultat
+void freeResult(Result* result){
+	if(result->next != NULL){
+		freeResult(result->next);
+	}
+	free(result);
+}
+
+//compte les item avec le status "DELETED_ITEM"
 void countDeleted(){
 	int nbDeleted = 0;
 	for(int i =0; i<TABLE_SIZE; i++){
@@ -317,6 +327,7 @@ void countDeleted(){
 	printf("Nombre d'item deleted : %d\n",nbDeleted );
 }
 
+//fonction de test
 void test(){
 	init();
 	//remplissage de la table
@@ -384,21 +395,27 @@ void test(){
 	Result* tete, *next;
 	tete = findItem("SUCRE");
 	next = tete;
+	printf("On recherche le sucre :\n");
 	while(next!= NULL){
 		printf("Item code : %d, Item name : %s\n", next->item->code, next->item->name);
 		next = next->next;
 	}
+	freeResult(tete);
 	tete = findItemWithIndex("SUCRE");
 	next = tete;
+	printf("On recherche le sucre :\n");
 	while(next!= NULL){
 		printf("Item code : %d, Item name : %s\n", next->item->code, next->item->name);
 		next = next->next;
 	}
+	freeResult(tete);
 	suppressItem(1);
 	tete = findItemWithIndex("SUCRE");
 	next = tete;
+	printf("On recherche le sucre :\n");
 	while(next!= NULL){
 		printf("Item code : %d, Item name : %s\n", next->item->code, next->item->name);
 		next = next->next;
 	}
+	freeResult(tete);
 }

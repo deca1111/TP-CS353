@@ -127,3 +127,4 @@ unsigned int hashIndex(const char *buffer, int size);
 
 void test();
 void countDeleted();
+void freeResult(Result* result);
